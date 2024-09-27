@@ -28,13 +28,7 @@ buildUI
   -> WidgetNode AppModel AppEvent
 buildUI wenv model = widgetTree where
   widgetTree = vstack [
-      label "Hello world",
-      spacer,
-      hstack [
-        label $ "Click count: " <> showt (model ^. clickCount),
-        spacer,
-        button "Increase count" AppIncrease
-      ]
+      label "haskellgram"
     ] `styleBasic` [padding 10]
 
 handleEvent
@@ -45,14 +39,14 @@ handleEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent wenv node model evt = case evt of
   AppInit -> []
-  AppIncrease -> [Model (model & clickCount +~ 1)]
+  AppIncrease -> [Model (model & clickCount += 1)]
 
 main :: IO ()
 main = do
   startApp model handleEvent buildUI config
   where
     config = [
-      appWindowTitle "Hello world",
+      appWindowTitle "haskellgram",
       appWindowIcon "./assets/images/icon.png",
       appTheme darkTheme,
       appFontDef "Regular" "./assets/fonts/Roboto-Regular.ttf",
