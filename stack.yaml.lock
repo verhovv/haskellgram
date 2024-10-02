@@ -18,6 +18,13 @@ packages:
       size: 15189
   original:
     hackage: monomer-1.6.0.0
+- completed:
+    hackage: bytestring-0.11.5.2@sha256:446ad0a558ee7efcb0aeebfe147bf3897c50241231a9131ff7d7d24f2c3c1f2f,7595
+    pantry-tree:
+      sha256: b51508ffad643fbb973d16af2bc58ad7a34d00c3926fa0e9a56058f0f989a066
+      size: 4019
+  original:
+    hackage: bytestring-0.11.5.2
 snapshots:
 - completed:
     sha256: 8b211c5a6aad3787e023dfddaf7de7868968e4f240ecedf14ad1c5b2199046ca

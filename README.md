@@ -1,10 +1,3 @@
-# Monomer starter application
+# HASKELLGRAM
 
-Starter application for the Monomer library, including:
-
-- Dependencies
-- Model and events type
-- Event handler
-- UI builder
-
-For more information, check https://github.com/fjvallarino/monomer.
+Trying to write a p2p chat in haskell. I think we're getting something...

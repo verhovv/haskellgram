@@ -1,15 +1,15 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.37.0.
 --
 -- see: https://github.com/sol/hpack
 
-name:           monomer-starter
+name:           haskellgram
 version:        0.1.0.0
-homepage:       https://github.com/githubuser/monomer-starter#readme
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2021 Author name here
+homepage:       https://github.com/verhovv/haskellgram
+author:         verhovv&dmitry416
+maintainer:     none
+copyright:      2024 verhovv&dmitry416
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -19,17 +19,19 @@ extra-source-files:
 executable app
   main-is: Main.hs
   other-modules:
-      Paths_monomer_starter
+      Paths_haskellgram
   hs-source-dirs:
       src
   default-extensions:
       OverloadedStrings
-  ghc-options: -fwarn-incomplete-patterns -threaded
+  ghc-options: -fwarn-incomplete-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , bytestring
     , data-default
     , lens
     , monomer
+    , network
     , text
     , text-show
   default-language: Haskell2010

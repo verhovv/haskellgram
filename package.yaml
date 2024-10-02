@@ -1,12 +1,12 @@
-name:                monomer-starter
+name:                haskellgram
 version:             0.1.0.0
 #synopsis:
 #description:
-homepage:            https://github.com/githubuser/monomer-starter#readme
+homepage:            https://github.com/verhovv/haskellgram
 license:             BSD3
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2021 Author name here
+author:              verhovv&dmitry416
+maintainer:          none
+copyright:           2024 verhovv&dmitry416
 #category:
 extra-source-files:
 - README.md
@@ -21,6 +21,8 @@ dependencies:
   - monomer
   - text
   - text-show
+  - network
+  - bytestring
 
 executables:
   app:
@@ -29,3 +31,5 @@ executables:
     ghc-options:
     - -fwarn-incomplete-patterns
     - -threaded
+    - -rtsopts 
+    - -with-rtsopts=-N

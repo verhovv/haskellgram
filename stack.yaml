@@ -36,14 +36,11 @@ packages:
 # forks / in-progress versions pinned to a git hash. For example:
 #
 # extra-deps:
-# - acme-missiles-0.3
-# - git: https://github.com/commercialhaskell/stack.git
-#   commit: e7b331f14bcffb8367cd58fbfc8b40ec7642100a
+# - acme-missiles-0.3g
 extra-deps:
 - nanovg-0.8.1.0
 - monomer-1.6.0.0
-#- git: https://github.com/fjvallarino/monomer
-#  commit: cb17cb553c76eea97718ff3953e516868c2b7087
+- bytestring-0.11.5.2
 
 # Override default flag values for local packages and extra-deps
 flags:
