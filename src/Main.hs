@@ -64,90 +64,86 @@ type Msg = (Int, String)
 
 mainLoop :: Socket -> Chan Msg -> Int -> IO ()
 mainLoop sock chan msgNum = do
-  putStrLn "Waiting for connection/users"
-  print "main"
   conn <- accept sock
-  print "accept sock"
   forkIO (runConn conn chan msgNum)
-  print "running con"
   mainLoop sock chan $! msgNum + 1
+
 
 runConn :: (Socket, SockAddr) -> Chan Msg -> Int -> IO ()
 runConn (sock, _) chan msgNum = do
-    print "connected"
     let broadcast msg = writeChan chan (msgNum, msg)
     hdl <- socketToHandle sock ReadWriteMode
     hSetBuffering hdl NoBuffering
 
-    putStrLn "Hi, what's your name?"
+    hPutStrLn hdl "Hi, what's your name?"
     name <- fmap init (hGetLine hdl)
     broadcast ("--> " ++ name ++ " entered chat.")
-    putStrLn ("Welcome, " ++ name ++ "!")
+    hPutStrLn hdl ("Welcome, " ++ name ++ "!")
 
     commLine <- dupChan chan
-  
+
     reader <- forkIO $ fix $ \loop -> do
         (nextNum, line) <- readChan commLine
-        when (msgNum /= nextNum) $ putStrLn line
-        -- msg <- recv sock 1024
-        -- B.putStrLn msg
+        when (msgNum /= nextNum) $ hPutStrLn hdl line
         loop
 
     handle (\(SomeException _) -> return ()) $ fix $ \loop -> do
-        -- line <- fmap init (hGetLine hdl)
-        line <- getLine
+        line <- fmap init (hGetLine hdl)
         case line of
-             "quit" -> print "Bye!"
-             _      -> broadcast ("name" ++ ": " ++ line) >> loop
+             "quit" -> hPutStrLn hdl "Bye!"
+             _      -> broadcast (name ++ ": " ++ line) >> loop
 
     killThread reader
-    --sendAll sock (B.pack ("<-- " ++ "name" ++ " left."))
+    broadcast ("<-- " ++ name ++ " left.")
     hClose hdl  
 
+conClient :: Socket -> Chan Msg -> IO ()
+conClient sock chan = do
+    reader <- forkIO $ fix $ \loop -> do
+        msg <- recv sock 1024
+        C.putStrLn msg
+        loop
 
--- main = runTCPClient "127.0.0.1" "3000" $ \s -> do
---     sendAll s "Hello, world!"
---     msg <- recv s 1024
---     putStr "Received: "
---     C.putStrLn msg
+    sender <- forkIO $ fix $ \loop -> do
+        msg <- C.getLine
+        sendAll sock msg
+        loop
 
--- -- from the "network-run" package.
--- runTCPClient :: HostName -> ServiceName -> (Socket -> IO a) -> IO a
--- runTCPClient host port client = withSocketsDo $ do
---     addr <- resolve
---     E.bracket (open addr) close client
---   where
---     resolve = do
---         let hints = defaultHints { addrSocketType = Stream }
---         NE.fromList <$> getAddrInfo (Just hints) (Just host) (Just port)
---     open addr = E.bracketOnError (openSocket addr) close $ \sock -> do
---         connect sock $ addrAddress addr
---         return sock
+    killThread reader
+    killThread sender
+
+-- clientConn :: Socket -> Chan Msg -> IO ()
+-- clientConn sock chan = do
+--     putStrLn "connected"
+--     reader <- forkIO $ fix $ \loop -> do 
+--         msg <- recv sock 1024
+--         C.putStrLn msg
+--         loop
+          
 
 main :: IO ()
--- host
-main = do
-  sock <- socket AF_INET Stream 0
-  setSocketOption sock ReuseAddr 1
-  bind sock (SockAddrInet 4242 (tupleToHostAddress (127, 0, 0, 1)))
-  listen sock 5
-  chan <- newChan
-  _ <- forkIO $ fix $ \loop -> do
-    (_, _) <- readChan chan
-    loop
-  mainLoop sock chan 0
-
--- client
+-- server
 -- main = do
 --   sock <- socket AF_INET Stream 0
 --   setSocketOption sock ReuseAddr 1
---   connect sock (SockAddrInet 4242 (tupleToHostAddress (127, 0, 0, 1)))
---   listen sock 5 -- ?
+--   bind sock (SockAddrInet 4242 (tupleToHostAddress (127, 0, 0, 1)))
+--   listen sock 5
 --   chan <- newChan
 --   _ <- forkIO $ fix $ \loop -> do
 --     (_, _) <- readChan chan
 --     loop
 --   mainLoop sock chan 0
+
+-- client
+main = do
+  sock <- socket AF_INET Stream 0
+  setSocketOption sock ReuseAddr 1
+  connect sock (SockAddrInet 4242 (tupleToHostAddress (192, 168, 148, 197)))
+  chan <- newChan
+  _ <- forkIO $ fix $ \loop -> do
+    (_, _) <- readChan chan
+    loop
+  mainLoop sock chan 0
 
   -- startApp model handleEvent buildUI config
   -- where
