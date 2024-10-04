@@ -111,14 +111,6 @@ conClient sock chan = do
 
     killThread reader
     killThread sender
-
--- clientConn :: Socket -> Chan Msg -> IO ()
--- clientConn sock chan = do
---     putStrLn "connected"
---     reader <- forkIO $ fix $ \loop -> do 
---         msg <- recv sock 1024
---         C.putStrLn msg
---         loop
           
 
 main :: IO ()
@@ -143,7 +135,7 @@ main = do
   _ <- forkIO $ fix $ \loop -> do
     (_, _) <- readChan chan
     loop
-  mainLoop sock chan 0
+  conClient sock chan
 
   -- startApp model handleEvent buildUI config
   -- where
