@@ -24,13 +24,14 @@ import qualified Monomer.Lens as L
 import Monomer.Helper (catchAny)
 import Data.Word (Word8)
 
-newtype AppModel = AppModel {
+newtype AppModel = AppModel{
   _clickCount :: Int
 } deriving (Eq, Show)
 
 data AppEvent
   = AppInit
-  | AppIncrease
+  | OnSendMessage
+  | TextChanged Text
   deriving (Eq, Show)
 
 makeLenses 'AppModel
@@ -41,12 +42,13 @@ buildUI
   -> WidgetNode AppModel AppEvent
 buildUI wenv model = widgetTree where
   widgetTree = vstack [
-      label "Hello world",
       spacer,
-      hstack [
-        label $ "Click count: " <> showt (model ^. clickCount),
-        spacer,
-        button "Increase count" AppIncrease
+      hstack[
+        textAreaV_ "" TextChanged [readOnly]
+      ],
+      hstack_ [sizeReqUpdater $ fixedToMinW 1] [
+        textAreaV "Message" TextChanged,
+        button "Send message" OnSendMessage
       ]
     ] `styleBasic` [padding 10]
 
@@ -58,7 +60,8 @@ handleEvent
   -> [AppEventResponse AppModel AppEvent]
 handleEvent wenv node model evt = case evt of
   AppInit -> []
-  AppIncrease -> [Model (model & clickCount +~ 1)]
+  OnSendMessage -> []
+  TextChanged text -> []
 
 doHost :: IO ()
 doHost = do
