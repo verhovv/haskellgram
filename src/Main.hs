@@ -8,7 +8,6 @@ import Data.Maybe
 import Data.Text (Text, pack)
 import Monomer
 import TextShow
-
 import Network.Socket
 import System.IO
 import Control.Exception
@@ -123,7 +122,6 @@ getMessages sock model event = do
 
 main :: IO ()
 main = do
-  sock <- socket AF_INET Stream 0
   startApp model handleEvent buildUI config
   where
     config = [
