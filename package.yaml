@@ -23,7 +23,6 @@ dependencies:
   - text-show
   - network
   - bytestring
-
 executables:
   app:
     source-dirs:      src

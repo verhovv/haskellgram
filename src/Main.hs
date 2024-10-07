@@ -27,8 +27,7 @@ import Data.Text.Lens
 data AppModel = AppModel {
   _iptext :: Text,
   _message :: Text,
-  _chat :: Text,
-  _crutch :: String
+  _chat :: Text
 } deriving (Eq, Show)
 
 data AppEvent
@@ -39,10 +38,10 @@ data AppEvent
   | JoinRoom Text
   | TextChanged Text
   | ShowMessage Text
-  | ClearCrutch
   deriving (Eq, Show)
 
 makeLenses 'AppModel
+
 
 buildUI
   :: WidgetEnv AppModel AppEvent
@@ -78,27 +77,28 @@ handleEvent
 handleEvent wenv node model evt = case evt of
   AppInit -> []
   GetMessages sock -> [Producer (getMessages sock model)]
-  SendMessages msg -> [
-    Model (model & crutch .~ (msg ^. from packed)),
-    Model (model & chat .~ ((model ^. chat) <> msg) <> "\n")]
+  SendMessages msg -> [Model (model & chat .~ ((model ^. chat) <> msg) <> "\n")]
   ShowMessage text -> [Model (model & chat .~ ((model ^. chat) <> text) <> "\n")]
   CreateRoom -> [Producer $ doHost model]
   JoinRoom ip -> [Producer $ doClient model (ip ^. from packed)]
   TextChanged text -> []
-  ClearCrutch -> [Model (model & crutch .~ "")]
+
 
 doHost :: AppModel -> (AppEvent -> IO ()) -> IO ()
 doHost model sendEvent = do
+  sendEvent $ ShowMessage "Created room"
   sock <- socket AF_INET Stream 0
   bind sock (SockAddrInet 4242 0)
   listen sock 1
 
   accept sock >>= (\(sockOther, y) -> do 
+    sendEvent $ ShowMessage "Connected"
     sendEvent (GetMessages sockOther)
-    forever $ do
-      when (model ^. crutch /= "") $ do 
-        sendAll sock (C.pack (model ^. crutch ^. from packed))
-        sendEvent ClearCrutch)
+    forkIO $ fix $ \loop -> do
+      msg <- getLine
+      sendAll sockOther (C.pack msg)
+      loop
+    pure())
 
 
 doClient :: AppModel -> String -> (AppEvent -> IO ()) -> IO ()
@@ -106,19 +106,25 @@ doClient model host sendEvent = do
   sock <- socket AF_INET Stream 0
   let ip = read <$> words host
   connect sock (SockAddrInet 4242 (tupleToHostAddress (ip!!0, ip!!1, ip!!2, ip!!3)))
+  sendEvent $ ShowMessage "Connected"
 
   sendEvent (GetMessages sock)
-  forever $ do
-      when (model ^. crutch /= "") $ do 
-        sendAll sock (C.pack (model ^. crutch ^. from packed))
-        sendEvent ClearCrutch
+  forkIO $ fix $ \loop -> do
+    msg <- getLine
+    sendAll sock (C.pack msg)
+    loop
+  pure()
+
 
 getMessages :: Socket -> AppModel -> (AppEvent -> IO ()) -> IO ()
 getMessages sock model event = do
-  msg <- recv sock 1024
-  unless (C.null msg) $ do
-    event $ ShowMessage (pack (C.unpack msg))
-  getMessages sock model event
+  forkIO $ fix $ \loop -> do
+    msg <- recv sock 1024
+    unless (C.null msg) $ do
+      C.putStrLn msg
+      event $ ShowMessage (pack (C.unpack msg))
+  pure()
+
 
 main :: IO ()
 main = do
@@ -134,7 +140,6 @@ main = do
     model = AppModel { 
       _iptext = "",
       _message = "",
-      _chat = "",
-      _crutch = ""
+      _chat = ""
     }
  
