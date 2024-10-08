@@ -7,8 +7,7 @@ The main competitor of all messengers. Pavel Durov is still only dreaming of suc
 If your build does not run, you need to install the GLEW and SDL2 libraries.
 
 ```bash
-sudo apt-get install libglew-dev
-sudo apt-get install libsdl2-dev
+sudo apt-get install libglew-dev libsdl2-dev
 ```
 
 ## Usage
