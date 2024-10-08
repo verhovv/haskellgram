@@ -13,6 +13,7 @@ import Network.Socket.ByteString (recv, sendAll)
 import qualified Data.ByteString.Char8 as C
 import Data.Word (Word8)
 import Data.Text.Lens
+import qualified Monomer.Core.Lens as L
 
 data AppModel = AppModel {
   _iptext :: Text,
@@ -43,24 +44,24 @@ buildUI
 buildUI wenv model = widgetTree where
   widgetTree = vstack [ 
       hstack_ [sizeReqUpdater $ fixedToMaxH 10] [
-        button "Create room" CreateRoom,
+        button "Create room" CreateRoom `styleBasic` [bgColor $ rgbHex "#66269a", border 0 $ rgbHex "#000", textColor $ rgbHex "#FFFFFF"],
         spacer,
-        keystroke [("Enter", JoinRoom (model ^. iptext))] $ textField_ iptext [placeholder "127 0 0 1"],
+        keystroke [("Enter", JoinRoom (model ^. iptext))] $ textField_ iptext [placeholder "127 0 0 1"] `styleBasic` [bgColor $ rgbHex "#303030", border 0 $ rgbHex "#000", textRight],
         spacer,
-        button "Join" (JoinRoom (model ^. iptext))
+        button "Join" (JoinRoom (model ^. iptext)) `styleBasic` [bgColor $ rgbHex "#66269a", border 0 $ rgbHex "#000", textColor $ rgbHex "#FFFFFF"]
       ],
       spacer,
       hstack [
         textAreaV_ (model ^. chat) TextChanged [readOnly, maxLines 1000]
-          `styleBasic` [textColor $ Color 255 255 255 1, height 500]
+          `styleBasic` [textColor $ Color 255 255 255 1, height 500, bgColor $ rgbHex "#303030", border 0 $ rgbHex "#000"]
       ],
       spacer,
       hstack_ [sizeReqUpdater $ fixedToMaxH 1] [
-        keystroke [("Enter", SendMessages $ model ^. message)] $ textField_ message [placeholder "Message"],
+        keystroke [("Enter", SendMessages $ model ^. message)] $ textField_ message [placeholder "Message"] `styleBasic` [bgColor $ rgbHex "#303030", border 0 $ rgbHex "#000"],
         spacer,
-        button "Send message" (SendMessages $ model ^. message)
+        button "Send message" (SendMessages $ model ^. message) `styleBasic` [bgColor $ rgbHex "#66269a", border 0 $ rgbHex "#000", textColor $ rgbHex "#FFFFFF"]
       ]
-    ] `styleBasic` [padding 10]
+    ] `styleBasic` [bgColor $ rgbHex "#1D1D1D", padding 10]
 
 handleEvent
   :: WidgetEnv AppModel AppEvent
