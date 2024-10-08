@@ -18,7 +18,6 @@ import Network.Socket.ByteString (recv, sendAll, send, sendMsg)
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C
 import qualified Data.List.NonEmpty as NE
-
 import qualified Monomer.Lens as L
 import Monomer.Helper (catchAny)
 import Data.Word (Word8)
@@ -38,10 +37,11 @@ data AppEvent
   | JoinRoom Text
   | TextChanged Text
   | ShowMessage Text
+  | SendMessageToSocket Socket
+  | ClearMessage
   deriving (Eq, Show)
 
 makeLenses 'AppModel
-
 
 buildUI
   :: WidgetEnv AppModel AppEvent
@@ -77,53 +77,55 @@ handleEvent
 handleEvent wenv node model evt = case evt of
   AppInit -> []
   GetMessages sock -> [Producer (getMessages sock model)]
-  SendMessages msg -> [Model (model & chat .~ ((model ^. chat) <> msg) <> "\n")]
+  SendMessageToSocket sock -> [Producer (sendMessages sock model)]
+  SendMessages msg -> [
+    Model (model & chat .~ ((model ^. chat) <> msg) <> "\n"),
+    Model (model & message .~ msg <> "\n")]
   ShowMessage text -> [Model (model & chat .~ ((model ^. chat) <> text) <> "\n")]
   CreateRoom -> [Producer $ doHost model]
   JoinRoom ip -> [Producer $ doClient model (ip ^. from packed)]
   TextChanged text -> []
-
+  ClearMessage -> [Model (model & message .~ "")]
 
 doHost :: AppModel -> (AppEvent -> IO ()) -> IO ()
 doHost model sendEvent = do
-  sendEvent $ ShowMessage "Created room"
+  sendEvent $ ShowMessage "---Waiting for connection...---"
   sock <- socket AF_INET Stream 0
   bind sock (SockAddrInet 4242 0)
   listen sock 1
 
   accept sock >>= (\(sockOther, y) -> do 
-    sendEvent $ ShowMessage "Connected"
-    sendEvent (GetMessages sockOther)
-    forkIO $ fix $ \loop -> do
-      msg <- getLine
-      sendAll sockOther (C.pack msg)
-      loop
-    pure())
-
+    sendEvent $ ShowMessage "---Connected---"
+    sendEvent $ GetMessages sockOther
+    sendEvent $ SendMessageToSocket sockOther)
 
 doClient :: AppModel -> String -> (AppEvent -> IO ()) -> IO ()
 doClient model host sendEvent = do
+  sendEvent $ ShowMessage "---Connection...---"
   sock <- socket AF_INET Stream 0
   let ip = read <$> words host
   connect sock (SockAddrInet 4242 (tupleToHostAddress (ip!!0, ip!!1, ip!!2, ip!!3)))
-  sendEvent $ ShowMessage "Connected"
 
-  sendEvent (GetMessages sock)
-  forkIO $ fix $ \loop -> do
-    msg <- getLine
-    sendAll sock (C.pack msg)
-    loop
-  pure()
-
+  sendEvent $ ShowMessage "---Connected---"
+  sendEvent $ GetMessages sock
+  sendEvent $ SendMessageToSocket sock
 
 getMessages :: Socket -> AppModel -> (AppEvent -> IO ()) -> IO ()
-getMessages sock model event = do
-  forkIO $ fix $ \loop -> do
-    msg <- recv sock 1024
-    unless (C.null msg) $ do
-      C.putStrLn msg
-      event $ ShowMessage (pack (C.unpack msg))
+getMessages sock model sendEvent = do
+  msg <- recv sock 1024
+  unless (C.null msg) $ do
+    sendEvent $ ShowMessage (pack (C.unpack msg))
+  sendEvent $ GetMessages sock
   pure()
+
+sendMessages :: Socket -> AppModel -> (AppEvent -> IO ()) -> IO ()
+sendMessages sock model sendEvent = do
+  unless (model ^. message == "" || last (model ^. message ^. from packed) /= '\n') $ do
+    sendAll sock $ C.pack $ init $ model ^. message ^. from packed
+    sendEvent $ ShowMessage $ pack $ "You: " <> init (model ^. message ^. from packed)
+    sendEvent ClearMessage
+  sendEvent $ SendMessageToSocket sock
+  pure ()
 
 
 main :: IO ()
