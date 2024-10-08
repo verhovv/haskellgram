@@ -57,8 +57,9 @@ buildUI wenv model = widgetTree where
         button "Join" (JoinRoom (model ^. iptext))
       ],
       spacer,
-      hstack[
+      hstack [
         textAreaV_ (model ^. chat) TextChanged [readOnly, maxLines 1000]
+          `styleBasic` [textColor $ Color 255 255 255 1, height 500]
       ],
       spacer,
       hstack_ [sizeReqUpdater $ fixedToMaxH 1] [
@@ -136,8 +137,10 @@ main = do
       appWindowTitle "HASKELLGRAM",
       appWindowIcon "./assets/images/icon.png",
       appTheme darkTheme,
-      appFontDef "Regular" "./assets/fonts/Roboto-Regular.ttf",
-      appInitEvent AppInit
+      appFontDef "Regular" "./assets/fonts/mainfont.ttf",
+      appInitEvent AppInit,
+      appMaxFps 20,
+      appWindowResizable False
       ]
     model = AppModel { 
       _iptext = "",
