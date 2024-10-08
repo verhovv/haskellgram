@@ -14,6 +14,8 @@ import qualified Data.ByteString.Char8 as C
 import Data.Word (Word8)
 import Data.Text.Lens
 import qualified Monomer.Core.Lens as L
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 
 data AppModel = AppModel {
   _iptext :: Text,
@@ -121,13 +123,13 @@ getMessages :: Socket -> AppModel -> (AppEvent -> IO ()) -> IO ()
 getMessages sock model sendEvent = do
   msg <- recv sock 1024
   unless (C.null msg) $ do
-    sendEvent $ ShowMessage (pack (C.unpack msg))
+    sendEvent $ ShowMessage $ T.decodeUtf8 msg
   sendEvent $ GetMessages sock
 
 sendMessages :: Socket -> AppModel -> (AppEvent -> IO ()) -> IO ()
 sendMessages sock model sendEvent = do
   unless (null (words $ model ^. message ^. from packed) || last (model ^. message ^. from packed) /= '\n') $ do
-    sendAll sock $ C.pack $ init $ model ^. message ^. from packed
+    sendAll sock $ T.encodeUtf8 $ pack $ init $ model ^. message ^. from packed
     sendEvent $ ShowMessage $ pack $ "You: " <> init (model ^. message ^. from packed)
     sendEvent ClearMessage
   sendEvent $ SendMessageToSocket sock
