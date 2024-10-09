@@ -2,9 +2,9 @@
 
 The main competitor of all messengers. Pavel Durov is still only dreaming of such a messenger.
 
-## Installation
-
 ![app](https://github.com/user-attachments/assets/42903cc3-6cb0-4440-a004-a509eabc9bd9)
+
+## Installation
 
 If your build does not run, you need to install the GLEW and SDL2 libraries.
 
